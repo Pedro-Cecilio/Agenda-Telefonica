@@ -11,16 +11,18 @@ datasource db {
 }
 
 model Contato {
-  id  Int  @id @default(autoincrement())
-  nome String 
-  idade Int
-  Telefone Telefone[]
+  id    Int      @id @default(autoincrement())
+  nome  String   
+  idade Int      
+  
+  // Define um relacionamento com a model Telefone
+  telefones Telefone[]
 }
-
-model Telefone {
-  id  Int @id @default(autoincrement())
-  contatoId Int
-
-  contato Contato @relation(fields: [contatoId], references: [id])
+model Telefone {   
+  id        Int    @id @default(autoincrement())
+  contatoId Int 
+  numero    String 
+  
+  contato   Contato @relation(fields: [contatoId], references: [id], onDelete: Cascade)
   
 }

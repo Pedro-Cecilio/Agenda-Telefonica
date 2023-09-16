@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import MensagemDeErro from './MensagemDeErro';
+import MensagemDeSucesso from './MensagemDeSucesso';
 
 function CadastroContato({ closeModal }) {
   // Defina o estado inicial para abrir o modal
   const [isOpen, setIsOpen] = useState(true);
   const [error, setError] = useState(null);
+  const [sucesso, setSucesso] = useState(null);
   const [quantTel, setQuantTel] = useState(0);
   const [name, setName] = useState('');
   const [age, setAge] = useState(0);
@@ -24,6 +26,7 @@ function CadastroContato({ closeModal }) {
   const handleCloseModal = () => {
     setIsOpen(false);
     closeModal(); // Chame a função de fechar modal passada como prop
+    window.location.reload()
   };
   function onChangeName(e) {
     setName(e.target.value)
@@ -61,7 +64,7 @@ function CadastroContato({ closeModal }) {
       }, 5000);
       return
     }
-    const data = { name: name, idade: age, telefones: telefonesValidos }
+    const data = { nome: name, idade: age, telefones: telefonesValidos }
 
     const response = await fetch('http://localhost:3000', {
       method: 'POST',
@@ -72,7 +75,18 @@ function CadastroContato({ closeModal }) {
       body: JSON.stringify(data)
     })
     const res = await response.json()
-    console.log(res)
+    if(res.error){
+      setError(`Erro ao cadastrar ${res.error}`)
+      setTimeout(() => {
+        setError(null)
+      }, 5000);
+    }
+    if(res.sucess){
+      setSucesso(res.sucess)
+      setTimeout(() => {
+        setSucesso(null)
+      }, 5000);
+    }
   }
 
   const inputsTelefone = [];
@@ -130,7 +144,7 @@ function CadastroContato({ closeModal }) {
                   name="quantidadeNumeros"
                   id="quantidadeNumeros"
                   required>
-                  <option value={0}>-</option>
+                  <option disabled selected value={0}>-</option>
                   {quantidades.map((i) => {
 
                     return <option value={i} key={i}>{i}</option>
@@ -162,6 +176,7 @@ function CadastroContato({ closeModal }) {
                   
           </div>
           {error && <MensagemDeErro message={error}/>}
+          {sucesso && <MensagemDeSucesso message={sucesso}/>}
 
         </div>
 
