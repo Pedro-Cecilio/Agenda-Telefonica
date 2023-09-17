@@ -1,30 +1,32 @@
 import React, { useState, useEffect } from "react";
 import CadastroContato from "./CadastroContato";
 import EditarContato from "./EditarContato";
-import ExcluirAlert from "./ExcluirAlert";
+import AlertDeExcluir from "./AlertDeExcluir";
 import MensagemDeErro from './MensagemDeErro';
 import MensagemDeSucesso from './MensagemDeSucesso';
+import Pagination from "./Paginacao";
+import Paginacao from "./Paginacao";
 
-function Contato({ contato }) {
-  const [currentNumberIndex, setCurrentNumberIndex] = useState(0);
+function Telefones({ contato }) {
+  const [indexNumeroAtual, setIndexNumeroAtual] = useState(0);
 
-  const previousNumber = () => {
-    if (currentNumberIndex > 0) {
-      setCurrentNumberIndex(currentNumberIndex - 1);
+  const numeroAnterior = () => {
+    if (indexNumeroAtual > 0) {
+      setIndexNumeroAtual(indexNumeroAtual - 1);
     }
   };
 
-  const nextNumber = () => {
-    if (currentNumberIndex < contato.telefones.length - 1) {
-      setCurrentNumberIndex(currentNumberIndex + 1);
+  const proximoNumero = () => {
+    if (indexNumeroAtual < contato.telefones.length - 1) {
+      setIndexNumeroAtual(indexNumeroAtual + 1);
     }
   };
 
   return (
     <td className="flex items-center pb-8 pt-11  border-b border-gray-200">
-      {currentNumberIndex > 0 && (
+      {indexNumeroAtual > 0 && (
         <svg
-          onClick={previousNumber}
+          onClick={numeroAnterior}
           className="w-2 h-4 text-white dark:text-gray-800 cursor-pointer"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
@@ -41,11 +43,11 @@ function Contato({ contato }) {
         </svg>
       )}
       <span id="contentNumber" className="px-2">
-        {contato.telefones[currentNumberIndex].numero}
+        {contato.telefones[indexNumeroAtual].numero}
       </span>
-      {currentNumberIndex < contato.telefones.length - 1 && (
+      {indexNumeroAtual < contato.telefones.length - 1 && (
         <svg
-          onClick={nextNumber}
+          onClick={proximoNumero}
           className="w-2 h-4 text-white dark:text-gray-800 cursor-pointer"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
@@ -70,30 +72,37 @@ function ListaTelefonica() {
   const [modalEditarOpen, setModalEditarOpen] = useState(false);
   const [contatos, setContatos] = useState([]);
   const [contatoDeletar, setContatoDeletar] = useState(null);
-  const [contatoEditar, setContatoEditar] = useState({});
-  const [excluirAlert, setExcluirAlert] = useState(false);
+  const [contatoEditar, setContatoEditar] = useState(null);
+  const [alertDeExcluir, setAlertDeExcluir] = useState(false);
   const [error, setError] = useState(null);
   const [sucesso, setSucesso] = useState(null);
   const [search, setSearch] = useState('');
+  const [paginaAtual, setPaginaAtual] = useState(1); // Página atual
+  const contatosPorPagina = 5; // Número de contatos por página
+
 
   // Função para abrir o modal
-  const openModalCadastro = () => {
+  const abrirModalCadastro = () => {
     setModalCadastroOpen(true);
   };
 
   // Função para fechar o modal
-  const closeModalCadastro = () => {
+  const fecharModalCadastro = () => {
     setModalCadastroOpen(false);
+    window.location.reload()
   };
 
-  const openModalEditar = (contato) => {
+  // Função para abrir o modal
+  const abrirModalEditar = (contato) => {
     setContatoEditar(contato)
     setModalEditarOpen(true);
   };
 
   // Função para fechar o modal
-  const closeModalEditar = () => {
+  const fecharModalEditar = () => {
+    setContatoEditar(null)
     setModalEditarOpen(false)
+    window.location.reload()
   };
 
   async function buscarTodosContatos() {
@@ -105,17 +114,16 @@ function ListaTelefonica() {
   }
   function deletarContato(contato) {
     setContatoDeletar(contato)
-    setExcluirAlert(true)
+    setAlertDeExcluir(true)
   }
   async function handleConfirmarExclusao(contato) {
     const result = await fetch(`http://localhost:3000/${contato.id}`, {
       method: "DELETE",
     });
     const response = await result.json();
-    console.log(response)
-    setExcluirAlert(false)
+    setAlertDeExcluir(false)
     if (response.error) {
-      setError(`Erro ao atualizar ${response.error}`)
+      setError(`Erro ao Excluir ${response.error}`)
       setTimeout(() => {
         setError(null)
       }, 5000);
@@ -131,7 +139,7 @@ function ListaTelefonica() {
   }
   function handleCancelarExclusao() {
     setContatoDeletar(null)
-    setExcluirAlert(false)
+    setAlertDeExcluir(false)
   }
   function onChangeSearch(e) {
     setSearch(e.target.value)
@@ -155,6 +163,11 @@ function ListaTelefonica() {
     buscarTodosContatos();
   }, []);
 
+  const indiceInicial = (paginaAtual - 1) * contatosPorPagina;
+  const indiceFinal = paginaAtual * contatosPorPagina;
+  const contatosDaPagina = contatos.slice(indiceInicial, indiceFinal);
+
+
   return (
     <>
       <div>
@@ -162,7 +175,7 @@ function ListaTelefonica() {
           <div>
             <button
               className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md"
-              onClick={(openModalCadastro)}
+              onClick={(abrirModalCadastro)}
             >
               Adicionar Contato
             </button>
@@ -198,22 +211,28 @@ function ListaTelefonica() {
             </tr>
           </thead>
           <tbody className="text-gray-700">
-            {contatos.map((contato) => (
+            {contatosDaPagina.map((contato) => (
               <tr key={contato.id} className="relative">
                 <td className="py-2 px-6 border-b border-gray-200">{contato.nome}</td>
                 <td className="py-2 px-6 border-b border-gray-200">{contato.idade}</td>
-                <Contato contato={contato} />
+                <Telefones contato={contato} />
                 <td className="py-2 px-6 border-b border-gray-200 text-center">
-                  <button onClick={() => openModalEditar(contato)} className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-md mr-2 max-md:m-2">Editar</button>
-                  <button onClick={()=>deletarContato(contato)} className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-md">Deletar</button>
+                  <button onClick={() => abrirModalEditar(contato)} className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-md mr-2 max-md:m-2">Editar</button>
+                  <button onClick={() => deletarContato(contato)} className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-md">Deletar</button>
                 </td>
               </tr>
             ))}
           </tbody>
+
         </table>
-        {modalCadastroOpen && <CadastroContato closeModal={closeModalCadastro} />}
-        {modalEditarOpen && <EditarContato closeModal={closeModalEditar} contato={contatoEditar} />}
-        {excluirAlert && <ExcluirAlert
+        <Paginacao
+          paginaAtual={paginaAtual}
+          totalPaginas={Math.ceil(contatos.length / contatosPorPagina)}
+          onPageChange={setPaginaAtual}
+        />
+        {modalCadastroOpen && <CadastroContato closeModal={fecharModalCadastro} />}
+        {modalEditarOpen && <EditarContato closeModal={fecharModalEditar} contato={contatoEditar} />}
+        {alertDeExcluir && <AlertDeExcluir
           onConfirm={() => handleConfirmarExclusao(contatoDeletar)}
           onCancel={handleCancelarExclusao}
           nomeDoContato={contatoDeletar.nome}

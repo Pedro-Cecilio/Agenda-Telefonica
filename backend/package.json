@@ -1,11 +1,10 @@
 {
   "name": "backend",
-  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsx watch ./src/index.ts",
+    "start": "nodemon --exec ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,6 +13,7 @@
   "devDependencies": {
     "@fastify/cors": "^8.3.0",
     "@types/node": "^20.2.5",
+    "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
