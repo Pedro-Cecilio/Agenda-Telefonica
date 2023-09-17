@@ -149,7 +149,6 @@ function ListaTelefonica() {
       method: "GET",
     });
     const response = await result.json();
-    console.log(response)
     if (response.error) {
       setError(`Erro ao atualizar ${response.error}`)
       setTimeout(() => {
